@@ -20,6 +20,7 @@ import pygame
 import Tiles
 import Player
 import random
+import Dice
 
 ################################################################################
 # Variables
@@ -199,8 +200,111 @@ class GameBoard:
         # Starting player is random
         self.player = random.randint(0, num_players-1)
 
+        # Figure out the starting coordinate for the lower right
+        # empty quadrant
+        row = len(self.board) / 2
+        col = len(self.board[row]) / 2
+        (width, height) = self.board[row][col].get_size()
+        (x, y) = self.board[row][col].get_position()
+        x += width
+        y += height
+
+        # Figure out the size of the lower right empty quadrant
+        row = len(self.board) - 1
+        col = len(self.board[row]) - 1
+        (width, height) = self.board[row][col].get_position()
+        width = width - x
+        height = height - y
+
+        # Initialize the dice
+        self.dice = Dice.Dice((x, y), (width, height))
+
         # Draw the initial board
         self.draw()
+
+    def reset(self):
+        """
+        Method Name:
+        reset
+
+        Description:
+        Reset the board.  All tiles are inactive and we
+        are waiting for a dice to be rolled
+
+        Inputs:
+        None
+
+        Outputs:
+        None
+        """
+
+        # Loop through all of the tiles on the game board and deactivate
+        for row in range(len(self.board)):
+            for col in range(len(self.board[row])):
+                if self.board[row][col] is not None:
+                    self.board[row][col].deactivate()
+
+        # Reset the dice
+        self.dice.reset()
+
+    def update_tiles(self, (row, col), x, y, moves):
+        """
+        Method Name:
+        update_tiles
+
+        Description:
+        Will update the active and deactivate tiles based on the player
+        position and dice roll value
+
+        Inputs:
+        (row, col) - current board position
+        x - current direction in the x-axis
+        y - current direction in the y-axis
+        moves - remaining moves
+
+        Outputs:
+        None
+        """
+
+        # Move the player piece
+        row = row + x
+        col = col + y
+
+        # If we are outside the board area, quit
+        if ((row < 0) or (col < 0) or
+                (row >= len(self.board)) or (col >= len(self.board[row]))):
+            return
+
+        # If we are on an illegal space, quit
+        if self.board[row][col] is None:
+            return
+
+        # If we have exhausted all moves, activate the tile and quit
+        if moves == 0:
+            self.board[row][col].activate()
+            return
+
+        # Update the number of moves
+        moves -= 1
+
+        # If this is the first move, try all directions
+        if (x == 0) and (y == 0):
+            self.update_tiles((row, col), -1, 0, moves)
+            self.update_tiles((row, col), 1, 0, moves)
+            self.update_tiles((row, col), 0, -1, moves)
+            self.update_tiles((row, col), 0, 1, moves)
+
+        # If we are moving left or right, try that direction also up and down
+        elif x != 0:
+            self.update_tiles((row, col), x, 0, moves)
+            self.update_tiles((row, col), 0, -1, moves)
+            self.update_tiles((row, col), 0, 1, moves)
+
+        # If we are moving up or down, try that direction also left and right
+        elif y != 0:
+            self.update_tiles((row, col), 0, y, moves)
+            self.update_tiles((row, col), -1, 0, moves)
+            self.update_tiles((row, col), 1, 0, moves)
 
     def draw(self):
         """
@@ -236,6 +340,9 @@ class GameBoard:
 
             # Draw the player piece
             player.draw(self.screen, position, size)
+
+        # Redraw the dice
+        self.dice.draw(self.screen)
 
         # Figure out the starting coordinates for the upper left
         # empty quadrant
@@ -294,6 +401,20 @@ class GameBoard:
             # Get the mouse position
             pos = pygame.mouse.get_pos()
 
+            # Check if the dice was clicked
+            roll = self.dice.clicked(pos)
+            if roll != 0:
+
+                # Activate/Deactivate tiles
+                pos = self.players[self.player].get_location()
+                self.update_tiles(pos, 0, 0, roll)
+
+                # Redraw the board
+                self.draw()
+
+                # Save some processing and just quit this function
+                return
+
             # Loop through all of the tiles on the game board
             for row in range(len(self.board)):
                 for col in range(len(self.board[row])):
@@ -316,6 +437,9 @@ class GameBoard:
 
                             # Move next player
                             self.player = (self.player + 1) % len(self.players)
+
+                            # Reset the board
+                            self.reset()
 
                             # Redraw the board
                             self.draw()

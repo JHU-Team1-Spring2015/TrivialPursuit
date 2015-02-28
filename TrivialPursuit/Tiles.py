@@ -115,14 +115,6 @@ class Tile:
         # Fill the tile
         self.surface.fill(self.color)
 
-        # This should be based on a throw of the dice, but
-        # just using random for now
-        temp = random.randint(0, 100)
-        if temp < 50:
-            self.active = True
-        else:
-            self.active = False
-
         # If the tile is not active draw an X through it
         if self.active is False:
             (width, length) = self.surface.get_size()
@@ -188,6 +180,40 @@ class Tile:
         """
 
         return self.position
+
+    def activate(self):
+        """
+        Method Name:
+        activate
+
+        Description:
+        Activate this tile
+
+        Inputs:
+        None
+
+        Outputs:
+        None
+        """
+
+        self.active = True
+
+    def deactivate(self):
+        """
+        Method Name:
+        deactivate
+
+        Description:
+        Deactivate this tile
+
+        Inputs:
+        None
+
+        Outputs:
+        None
+        """
+
+        self.active = False
 
 
 class People(Tile):
