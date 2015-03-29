@@ -17,7 +17,6 @@ None at this time
 ################################################################################
 
 import pygame
-import random
 
 ################################################################################
 # Variables
@@ -145,7 +144,7 @@ class Tile:
         """
 
         was_clicked = self.active and self.rect.collidepoint(pos)
-        return was_clicked, self.tile_type, self.headquarter
+        return was_clicked
 
     def get_size(self):
         """
@@ -180,6 +179,40 @@ class Tile:
         """
 
         return self.position
+
+    def get_type(self):
+        """
+        Method Name:
+        get_type
+
+        Description:
+        Return the tile type
+
+        Inputs:
+        None
+
+        Outputs:
+        self.tile_type
+        """
+
+        return self.tile_type
+
+    def get_headquarter(self):
+        """
+        Method Name:
+        get_headquarter
+
+        Description:
+        Return the tile headquarter status
+
+        Inputs:
+        None
+
+        Outputs:
+        self.headquarter
+        """
+
+        return self.headquarter
 
     def activate(self):
         """

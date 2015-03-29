@@ -17,10 +17,12 @@ None at this time
 ################################################################################
 
 import pygame
+import pymsgbox
 import Tiles
 import Player
 import random
 import Dice
+import Questions
 
 ################################################################################
 # Variables
@@ -167,14 +169,14 @@ class GameBoard:
         None
         """
 
+        # Initialize the questions
+        self.questions = Questions.Questions()
+
         # Store the screen for access in other methods
         self.screen = screen
 
         # Set the font we will use for text (font, size, bold, italic)
         self.font = pygame.font.SysFont('Arial', 25, False, False)
-
-        # Initialize the debug text
-        self.debug_text = "Testing"
 
         # Initialize the tile sizes and positions
         (screen_width, screen_height) = self.screen.get_size()
@@ -354,26 +356,18 @@ class GameBoard:
         y += height
 
         # Generate the text for the active player
-        text = self.font.render("Player #%d" % (self.player+1),
-                                True, (255, 255, 255))
+        temp = self.players[self.player].get_name()
 
         # Add the text to the screen
-        self.screen.blit(text, (x, y))
+        text1 = self.font.render(temp, True, (255, 255, 255))
+        self.screen.blit(text1, (x, y))
 
-        # Figure out the starting coordinate for the upper right
-        # empty quadrant
-        row = 0
-        col = len(self.board[row]) / 2
-        (width, height) = self.board[row][col].get_size()
-        (x, y) = self.board[row][col].get_position()
-        x += width
-        y += height
-
-        # Generate the text for the debug
-        text = self.font.render(self.debug_text, True, (255, 255, 255))
+        # Also, need to tell the player which piece they are
+        temp = "Player Piece #%d" % (self.player+1)
 
         # Add the text to the screen
-        self.screen.blit(text, (x, y))
+        text2 = self.font.render(temp, True, (255, 255, 255))
+        self.screen.blit(text2, (x, y + text1.get_height()))
 
     def execute(self, clicked):
         """
@@ -388,15 +382,12 @@ class GameBoard:
         clicked - flag to indicate if the screen was clicked
 
         Outputs:
-        None
+        Name of the game winner
         """
 
         # If the mouse is clicked we need to see if we recognize
         # what was clicked
         if clicked is True:
-
-            # Reinitialize the debug text
-            self.debug_text = ""
 
             # Get the mouse position
             pos = pygame.mouse.get_pos()
@@ -413,7 +404,7 @@ class GameBoard:
                 self.draw()
 
                 # Save some processing and just quit this function
-                return
+                return None
 
             # Loop through all of the tiles on the game board
             for row in range(len(self.board)):
@@ -421,28 +412,92 @@ class GameBoard:
                     if self.board[row][col] is not None:
 
                         # Get the tile clicked status
-                        (is_clicked, text, headquarter) = \
+                        is_clicked = \
                             self.board[row][col].clicked(pos)
 
                         # If clicked, set the text to display
                         if is_clicked:
 
-                            # Store the debug text
-                            self.debug_text = text
-                            if headquarter is True:
-                                self.debug_text += " (Headquarter)"
+                            return self.update(row, col)
 
-                            # Move the player piece
-                            self.players[self.player].set_location((row, col))
+    def update(self, row, col):
+        """
+        Method Name:
+        update
 
-                            # Move next player
-                            self.player = (self.player + 1) % len(self.players)
+        Description:
+        Update the game board based on if the player answers the
+        question correctly
 
-                            # Reset the board
-                            self.reset()
+        Inputs:
+        (row, col) - location of the selected game board tile
 
-                            # Redraw the board
-                            self.draw()
+        Outputs:
+        Name of the game winner
+        """
+
+        # Assume not the end of the game
+        winner = None
+
+        # Grab the tile type / question category
+        tile_type = self.board[row][col].get_type()
+        question_category = tile_type
+
+        # Move the player piece
+        self.players[self.player].set_location((row, col))
+
+        # If it is a hub tile, we need to select the
+        # question category
+        if tile_type == "Hub":
+
+            # If the player can win, the other players
+            # select the category for the active player
+            text = ""
+            if self.players[self.player].can_win():
+                text = "Other Players, "
+
+            # Generate the text to select a question category
+            text += "Please select a question category:\n"
+
+            # Configure the buttons
+            buttons = ["People", "Events", "Places", "Holidays"]
+
+            # Display the prompt to the user
+            question_category = pymsgbox.confirm(text, "Category?", buttons)
+
+        # If not a roll again tile, ask the player a question
+        correct_answer = True
+        if tile_type != "Roll Again":
+
+            # Display the question
+            correct_answer = self.questions.ask(question_category)
+
+        # If the player answers incorrectly, move to the next player
+        if correct_answer is False:
+
+            # Move next player
+            self.player = (self.player + 1) % len(self.players)
+
+        # If the tile is a headquarter
+        elif self.board[row][col].get_headquarter() is True:
+
+            # Add the scoring wedge
+            self.players[self.player].add_wedge(self.board[row][col].get_type())
+
+        # If it is a hub and the player can win the game
+        if (tile_type == "Hub") and self.players[self.player].can_win():
+
+                # Set the game winner
+                winner = self.players[self.player].get_name()
+
+        # Reset the board
+        self.reset()
+
+        # Redraw the board
+        self.draw()
+
+        # Return the status
+        return winner
 
 
 ################################################################################

@@ -17,6 +17,7 @@ None at this time
 ################################################################################
 
 import pygame
+import pymsgbox
 import WelcomeScreen
 import GameBoard
 
@@ -75,14 +76,21 @@ if __name__ == "__main__":
             # If the user selected number of players
             if welcome_screen.execute(mouse_click):
 
+                # Initialize and move to the game board
                 num_players = welcome_screen.get_num_players()
                 game_board = GameBoard.GameBoard(screen, num_players)
                 state += 1
 
-        # If the state is 2 (waiting for dice roll)
+        # If the state is 2 (playing game)
         elif state == 2:
 
-            game_board.execute(mouse_click)
+            winner = game_board.execute(mouse_click)
+            if winner is not None:
+
+                text = "Congratulations %s!\n" % winner
+                text += "You are the Winner!"
+                pymsgbox.alert(text, "Congratulations")
+                done = True
 
         # Copy the window buffer to the main display
         pygame.display.flip()
