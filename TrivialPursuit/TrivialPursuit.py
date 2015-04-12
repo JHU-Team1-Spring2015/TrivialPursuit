@@ -40,7 +40,7 @@ if __name__ == "__main__":
     pygame.init()
 
     # Open the screen (resolution, options)
-    screen = pygame.display.set_mode((600, 600),
+    screen = pygame.display.set_mode((630, 630),
                                      pygame.DOUBLEBUF | pygame.HWSURFACE)
 
     # Set the window title

@@ -47,6 +47,10 @@ class Tile:
     # Set the tile type
     tile_type = "N/A"
 
+    # Set the tile image
+    image_file = ""
+    image = None
+
     def __init__(self, headquarter=False):
         """
         Method Name:
@@ -89,12 +93,13 @@ class Tile:
         None
         """
 
-        # Initialize the surface
-        self.surface = pygame.Surface(size, pygame.SRCALPHA)
-
         # Store the size and position
         self.size = size
         self.position = position
+
+        # Create the image
+        self.image = pygame.image.load(self.image_file).convert()
+        self.image = pygame.transform.scale(self.image, self.size)
 
     def draw(self, screen):
         """
@@ -111,19 +116,16 @@ class Tile:
         None
         """
 
-        # Fill the tile
-        self.surface.fill(self.color)
-
-        # If the tile is not active draw an X through it
+        # If the tile is not active, grey out the image
         if self.active is False:
-            (width, length) = self.surface.get_size()
-            pygame.draw.line(self.surface, (0, 0, 0), (0, 0),
-                             (width, length), 10)
-            pygame.draw.line(self.surface, (0, 0, 0),
-                             (width, 0), (0, length), 10)
+            self.image.set_alpha(50)
 
-        # Draw the tile
-        self.rect = screen.blit(self.surface, self.position)
+        # If the tile is active, set the image to the normal
+        else:
+            self.image.set_alpha(255)
+
+        # Draw the image to the screen
+        self.rect = screen.blit(self.image, self.position)
 
     def clicked(self, pos):
         """
@@ -267,6 +269,9 @@ class People(Tile):
     # Set the tile type
     tile_type = "People"
 
+    # Set the tile image file
+    image_file = "people.png"
+
 
 class Events(Tile):
     """
@@ -285,6 +290,9 @@ class Events(Tile):
 
     # Set the tile type
     tile_type = "Events"
+
+    # Set the tile image file
+    image_file = "events.png"
 
 
 class Places(Tile):
@@ -305,6 +313,9 @@ class Places(Tile):
     # Set the tile type
     tile_type = "Places"
 
+    # Set the tile image file
+    image_file = "places.png"
+
 
 class Holidays(Tile):
     """
@@ -323,6 +334,9 @@ class Holidays(Tile):
 
     # Set the tile type
     tile_type = "Holidays"
+
+    # Set the tile image file
+    image_file = "holiday.png"
 
 
 class RollAgain(Tile):
@@ -343,6 +357,9 @@ class RollAgain(Tile):
     # Set the tile type
     tile_type = "Roll Again"
 
+    # Set the tile image file
+    image_file = "rollagain.png"
+
 
 class Hub(Tile):
     """
@@ -361,6 +378,10 @@ class Hub(Tile):
 
     # Set the tile type
     tile_type = "Hub"
+
+    # Set the tile image file
+    image_file = "hub.png"
+
 
 ################################################################################
 # Functions
